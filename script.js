@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const root = document.documentElement;
   const header = document.querySelector('[data-header]');
+  const menuToggle = document.querySelector('[data-menu-toggle]');
   const navLinks = Array.from(document.querySelectorAll('[data-nav-link]'));
   const themeSwitch = document.querySelector('#themeSwitch');
   const themeSwitchLabel = themeSwitch?.querySelector('.theme-switch__label');
@@ -39,6 +40,14 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const getCurrentTheme = () => (root.dataset.theme === 'olive-light' ? 'olive-light' : 'dark');
+
+  const setMobileMenu = (isOpen) => {
+    header?.classList.toggle('is-menu-open', isOpen);
+    menuToggle?.setAttribute('aria-expanded', String(isOpen));
+    menuToggle?.setAttribute('aria-label', isOpen ? 'Fechar menu' : 'Abrir menu');
+  };
+
+  const closeMobileMenu = () => setMobileMenu(false);
 
   const toggleTheme = () => {
     const nextTheme = getCurrentTheme() === 'dark' ? 'olive-light' : 'dark';
@@ -79,6 +88,13 @@ document.addEventListener('DOMContentLoaded', () => {
     themeSwitch.addEventListener('click', toggleTheme);
   }
 
+  if (menuToggle) {
+    menuToggle.addEventListener('click', () => {
+      const isOpen = menuToggle.getAttribute('aria-expanded') === 'true';
+      setMobileMenu(!isOpen);
+    });
+  }
+
   navLinks.forEach((link) => {
     link.addEventListener('click', (event) => {
       const href = link.getAttribute('href');
@@ -86,6 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const target = document.querySelector(href);
       if (!target) return;
       event.preventDefault();
+      closeMobileMenu();
       target.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
     });
   });
@@ -96,8 +113,27 @@ document.addEventListener('DOMContentLoaded', () => {
       const target = selector ? document.querySelector(selector) : null;
       if (!target) return;
       event.preventDefault();
+      closeMobileMenu();
       target.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
     });
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!header?.classList.contains('is-menu-open')) return;
+    if (header.contains(event.target)) return;
+    closeMobileMenu();
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      closeMobileMenu();
+    }
+  });
+
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 900) {
+      closeMobileMenu();
+    }
   });
 
   const setActiveLink = (id) => {
